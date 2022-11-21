@@ -55,7 +55,7 @@ public class GameOfLife {
         int sizeY = 500;
         jdlv.portActivationSystem = 50000;
         jdlv.portRegistry = 50001;
-        jdlv.fichierConfigPolicy = "jeuDeLaVie.policy";
+        jdlv.fichierConfigPolicy = "gameOfLife.policy";
 
         // Création et paramétrage du serveur
         jdlv.se = new Server();
