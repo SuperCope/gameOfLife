@@ -6,24 +6,24 @@ import java.rmi.activation.*;
 public class TabCellulleImpl extends Activatable implements TabCellule, Serializable {
     int sizeX;
     int sizeY;
-    Cellule tabCellules[][];
-    public TabCellulleImpl(ActivationID id, MarshalledObject data,int sizeX,int sizeY) throws RemoteException {
+    Cellule cellules[][];
+    public TabCellulleImpl(ActivationID id, MarshalledObject data) throws RemoteException {
         super(id,0);
-        this.sizeX = sizeX;
-        this.sizeY = sizeY;
-        this.tabCellules = new Cellule[sizeX][sizeY];
     }
-    public TabCellulleImpl(ActivationID id, MarshalledObject data,Cellule tabCellules[][]) throws RemoteException {
-        super(id,0);
-        this.sizeX = this.tabCellules.length;
-        this.sizeY = this.tabCellules.length;
-        this.tabCellules = tabCellules;
-    }
+
     public int getSizeX() {
         return this.sizeX;
     }
+    public Cellule[][] getCellules() {
+        return this.cellules;
+    }
+    public void setCellules(Cellule[][] cellules) {
+
+        this.cellules = cellules;
+        this.sizeX = cellules.length;
+        this.sizeY = cellules[0].length;
+    }
     public void setSizeX(int sizeX){
-        System.out.println("EDITING X");
         this.sizeX = sizeX;
     }
     public void setSizeY(int sizeY){
@@ -33,7 +33,5 @@ public class TabCellulleImpl extends Activatable implements TabCellule, Serializ
         return this.sizeY;
     }
 
-    public String sayHello(String nom) throws RemoteException{
-        return "Hello "+nom;
-    }
+
 }
