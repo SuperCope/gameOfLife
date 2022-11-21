@@ -42,6 +42,8 @@ public class Server
             tabCellule = (TabCellule)Activatable.register(objectDesc);
         }catch (Exception e){
             e.printStackTrace();
+            System.err.println("[ERROR] IMPOSSIBLE DE DEMARRER LE SERVEUR");
+            System.exit(0);
         }
         return tabCellule;
     }

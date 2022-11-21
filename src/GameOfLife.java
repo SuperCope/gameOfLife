@@ -7,31 +7,30 @@ public class GameOfLife {
     String fichierConfigPolicy;
 
     public void createServer(){
-        this.se = new Server();
         try {
+            // Configuration du serveur
             this.se.setup(this.portActivationSystem,this.portRegistry,this.fichierConfigPolicy);
         }catch (Exception e){
             e.printStackTrace();
+            System.err.println("[ERROR] LA CONFIGURATION DU SERVEUR A ECHOUE");
+            System.exit(0);
+
         }
     }
 
-    public void startServer(TabCellule tabCellule){
-        try{
-            this.se.start(tabCellule);
-            System.out.println("[INFO] SERVER STARTED");
-        }catch (Exception e){
-            System.err.println("[ERROR] VEUILLEZ VERIFIER QUE LE SERVEUR RMID SOIT BIEN LANCE (Cf README.md)");
-        }
-    }
     public void createCommunicator(){
+        // Création du communicateur
        this.co = new Communicator(null,this);
+
+       // Connexion du communicateur au serveur
        this.co.connect("localhost",this.portRegistry);
-       this.co.createTabCellules();
     }
     public TabCellule initTabCellules(TabCellule tabCellules,int sizeX,int sizeY){
 
         try {
+            // Création des cellules
             Cellule[][] cellules = new Cellule[sizeX][sizeY];
+
             for (int numRow = 0; numRow < sizeX; numRow++) {
                 for (int numCol = 0; numCol < sizeY; numCol++) {
                     cellules[numRow][numCol] = new Cellule(numRow,numCol,0,false);
@@ -43,6 +42,8 @@ public class GameOfLife {
         }catch (Exception e){
             System.err.println("[ERROR] ERREUR LORS DE L'INITIALISATION DES CELLULES");
             e.printStackTrace();
+            System.exit(0);
+
         }
         return tabCellules;
     }
@@ -56,7 +57,8 @@ public class GameOfLife {
         jdlv.portRegistry = 50001;
         jdlv.fichierConfigPolicy = "jeuDeLaVie.policy";
 
-        // Création du serveur
+        // Création et paramétrage du serveur
+        jdlv.se = new Server();
         jdlv.createServer();
 
         try {
@@ -68,11 +70,18 @@ public class GameOfLife {
             jdlv.se.start(tabCellule);
 
         }catch (Exception e){
+            System.err.println("[ERROR] IMPOSSIBLE DE DEMARRER LE SERVEUR");
+
             e.printStackTrace();
+            System.exit(0);
+
         }
 
         // Création du communicateur (pour faire dialoguer les calculateurs entre eux et envoyer les données au Disaplyer)
         jdlv.createCommunicator();
+
+        // Création des calculateurs
+        jdlv.co.initCalculators();
 
     }
 }
