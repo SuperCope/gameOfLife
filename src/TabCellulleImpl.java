@@ -20,8 +20,6 @@ public class TabCellulleImpl extends Activatable implements TabCellule, Serializ
     public void setCellules(Cellule[][] cellules) {
 
         this.cellules = cellules;
-        this.sizeX = cellules.length;
-        this.sizeY = cellules[0].length;
     }
     public void setSizeX(int sizeX){
         this.sizeX = sizeX;

@@ -1,13 +1,17 @@
 # gameOfLife
 Projet de Systèmes Distribués
 
-Lancer le serveur (se placer dans le dossier gameOfLife) : 
-```
-rmid -port 50000 -J-Djava.security.policy=gameOfLife.policy
-```
+## Préparation du lancement
+Se placer dans le dossier `/out/production/jeuDeLaVie` pour exécuter les commandes ci-dessous :
 
+## Lancement du serveur
 
-Il est possible qu'il faille lancer la commande ci-dessous également :
+1) Lancer le rmiregistry
 ```
-rmirgistry 49999
+rmiregistry
 ``` 
+
+2) Lancer le rmid : 
+```
+rmid -port 50000 -J-Djava.security.policy=../../../gameOfLife.policy
+```
