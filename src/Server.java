@@ -1,3 +1,5 @@
+import engine.ComputeEngine;
+
 import java.rmi.Naming;
 import java.rmi.RemoteException;
 import java.rmi.activation.*;
@@ -12,23 +14,26 @@ public class Server
     String fichierConfigPolicy;
 
     Registry registry;
+    ComputeEngine computer;
 
 
 
-    public void setup(int portActivationSystem,int portRegistry,String fichierConfigPolicy){
+    public void setup(int portActivationSystem,int portRegistry,String fichierConfigPolicy,ComputeEngine ce){
         this.portActivationSystem = portActivationSystem;
         this.portRegistry = portRegistry;
         this.fichierConfigPolicy = fichierConfigPolicy;
+        this.computer = ce;
         System.setProperty("java.security.policy", fichierConfigPolicy);
     }
     public void start(TabCellule tabCellule) throws Exception{
 
         this.registry = LocateRegistry.createRegistry(portRegistry);
 
-        this.registry.rebind("InitialTabCells", tabCellule);
+
+        this.registry.rebind("TabCells0", tabCellule);
 
     }
-    public TabCellule createSharedObject() throws Exception {
+    public TabCellule createSharedObject() {
         TabCellule tabCellule = null;
         try {
             ActivationGroupDesc agroupdesc = new ActivationGroupDesc(null,null);

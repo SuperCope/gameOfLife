@@ -1,19 +1,37 @@
 import client.ComputeMyTask;
 import engine.ComputeEngine;
 
+import java.rmi.RemoteException;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 public class GameOfLife {
     Server se;
     Communicator co;
     int portActivationSystem;
     int portRegistry;
     String fichierConfigPolicy;
-    final int MAX_CELLS_PROCESS = 1000;
+    final int MAX_CELLS_PROCESS = 10;
+    int nbCalculators;
+    int sizeX;
+    int sizeY;
 
 
     public void createServer(){
+        // Création du compute engine
+        /* ComputeEngine ce = null;
+        try {
+            System.out.println("\u001B[34m"+"[INFO] LINKING THE COMPUTE ENGINE..."+"\u001B[0m");
+            ce = new ComputeEngine();
+            ce.start();
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }*/
         try {
             // Configuration du serveur
-            this.se.setup(this.portActivationSystem,this.portRegistry,this.fichierConfigPolicy);
+            this.se.setup(this.portActivationSystem,this.portRegistry,this.fichierConfigPolicy,null);
             System.out.println("\u001B[34m"+"[INFO] CREATING THE SERVER..."+"\u001B[0m");
         }catch (Exception e){
             e.printStackTrace();
@@ -25,33 +43,35 @@ public class GameOfLife {
 
     public void createCommunicator(){
         // Création du communicateur
-       this.co = new Communicator(null,this);
+        ExecutorService executorService = Executors.newFixedThreadPool(this.nbCalculators);
+       this.co = new Communicator(null,executorService);
 
        // Connexion du communicateur au serveur
        this.co.connect("localhost",this.portRegistry);
     }
 
 
-    public static void main(String[] args) {
-
-        GameOfLife jdlv = new GameOfLife();
-        int nbCalculators = 4;
-        int sizeX = jdlv.MAX_CELLS_PROCESS;
-        int sizeY = jdlv.MAX_CELLS_PROCESS;
-        jdlv.portActivationSystem = 50000;
-        jdlv.portRegistry = 50001;
-        jdlv.fichierConfigPolicy = "gameOfLife.policy";
-
+    public void setParams(){
+        this.nbCalculators = 10;
+        this.sizeX = this.MAX_CELLS_PROCESS;
+        this.sizeY = this.MAX_CELLS_PROCESS;
+        this.portActivationSystem = 50000;
+        this.portRegistry = 50001;
+        this.fichierConfigPolicy = "gameOfLife.policy";
+    }
+    public void init(){
         // Création et paramétrage du serveur
-        jdlv.se = new Server();
-        jdlv.createServer();
+        this.se = new Server();
+        this.createServer();
 
         try {
-            // Création de l'objet partagé
-            TabCellule tabCellule = jdlv.se.createSharedObject();
+            // Création des objets partagé
+            TabCellule tabCellule = this.se.createSharedObject();
+
+
 
             // Démarrage du serveur
-            jdlv.se.start(tabCellule);
+            this.se.start(tabCellule);
 
         }catch (Exception e){
             System.err.println("[ERROR] IMPOSSIBLE DE DEMARRER LE SERVEUR");
@@ -62,34 +82,81 @@ public class GameOfLife {
         }
 
         // Création du communicateur (pour faire dialoguer les calculateurs entre eux et envoyer les données au Disaplyer)
-        jdlv.createCommunicator();
+        this.createCommunicator();
 
-
-        // Création du compute engine
-        try {
-            System.out.println("\u001B[34m"+"[INFO] LINKING THE COMPUTE ENGINE..."+"\u001B[0m");
-            ComputeEngine ce = new ComputeEngine();
-            ce.start();
-
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-
-        // Création du client pour le compute engine
-        try {
-            System.out.println("\u001B[34m"+"[INFO] BINDING THE COMPUTE ENGINE..."+"\u001B[0m");
-            ComputeMyTask cmt = new ComputeMyTask();
-            cmt.start();
-
-        }catch (Exception e){
-            e.printStackTrace();
-        }
 
         // Création des calculateurs
-        jdlv.co.initCalculators(nbCalculators,sizeX,sizeY);
-
-
-
+        this.co.createCalculators(nbCalculators,sizeX,sizeY);
 
     }
+    public static void main(String[] args) {
+
+        GameOfLife jdlv = new GameOfLife();
+        jdlv.setParams();
+        jdlv.init();
+        try {
+            jdlv.start();
+        }catch (Exception e){
+            e.printStackTrace();
+        }
+    }
+
+    public void start() throws Exception {
+        this.co.generation = 1;
+        this.co.generationTarget = 16;
+
+        while(this.co.generation<this.co.generationTarget){
+            // On récupère les cellules
+            this.co.tabCellulles  = (TabCellule) this.co.registry.lookup("TabCells"+(this.co.generation-1));
+
+            // On redécoupe
+            for(int numCalculateur= 0;numCalculateur<nbCalculators;numCalculateur++) {
+                Cellule[][] cellules = new Cellule[sizeX][sizeY];
+                int compteur = 0;
+                for (int i = 0; i < MAX_CELLS_PROCESS; i++) {
+                    for (int j = 0; j < MAX_CELLS_PROCESS; j++) {
+
+                        int indexTotY = compteur;
+
+                        cellules[i][j] = this.co.tabCellulles.getCellules()[numCalculateur][indexTotY];
+
+                        compteur++;
+                    }
+                }
+                this.co.calculators[numCalculateur].setCellules(cellules);
+            }
+
+            while(!this.co.analyseNeightbors()){
+                // On applique les règles du jeu de la vie
+            }
+
+            // On réassemble les tableaux de cellules des calculateurs
+            Cellule[][] nouvCellules = new Cellule[nbCalculators][sizeX * sizeY];
+
+            for(int numCalculator = 0;numCalculator<nbCalculators;numCalculator++){
+                Cellule[][] cellulesCalculateur = this.co.calculators[numCalculator].getCellules();
+                int compteur = 0;
+
+                for(int row = 0;row<cellulesCalculateur.length;row++){
+                    for(int col = 0;col<cellulesCalculateur[0].length;col++){
+
+                        nouvCellules[numCalculator][compteur] =
+                                cellulesCalculateur[row][col];
+                        compteur++;
+                    }
+                }
+            }
+            this.co.tabCellulles.setCellules(nouvCellules);
+
+            // On met à jour le registry
+            this.co.registry.bind("TabCells"+this.co.generation, this.co.tabCellulles);
+
+
+            // On met à jour la génération
+            this.co.generation++;
+
+
+        }
+    }
+
 }

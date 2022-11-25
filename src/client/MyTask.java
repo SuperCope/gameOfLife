@@ -11,7 +11,11 @@ public class MyTask  implements Task {
 
     }
     public Object execute(){
+        this.call();
         return null;
+    }
+    public String call(){
+        return "";
     }
 
 

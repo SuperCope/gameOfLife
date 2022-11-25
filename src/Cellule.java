@@ -6,6 +6,7 @@ public class Cellule implements CelluleInterface, Serializable {
     int generation;
     boolean alive;
 
+
     public Cellule(int row, int col, int generation, boolean alive){
         this.row = row;
         this.col = col;
@@ -36,5 +37,9 @@ public class Cellule implements CelluleInterface, Serializable {
     }
     public void setAlive(boolean alive){
         this.alive =alive;
+    }
+
+    public boolean isAlive(){
+        return this.alive;
     }
 }
