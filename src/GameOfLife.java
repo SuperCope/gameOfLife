@@ -2,6 +2,7 @@ import client.ComputeMyTask;
 import engine.ComputeEngine;
 
 import java.rmi.RemoteException;
+import java.util.HashSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -16,6 +17,7 @@ public class GameOfLife {
     int nbCalculators;
     int sizeX;
     int sizeY;
+    int size;
 
 
     public void createServer(){
@@ -52,9 +54,9 @@ public class GameOfLife {
 
 
     public void setParams(){
-        this.nbCalculators = 10;
-        this.sizeX = this.MAX_CELLS_PROCESS;
-        this.sizeY = this.MAX_CELLS_PROCESS;
+        this.nbCalculators = 4;
+        this.sizeX = 4000;
+        this.sizeY = 4000;
         this.portActivationSystem = 50000;
         this.portRegistry = 50001;
         this.fichierConfigPolicy = "gameOfLife.policy";
@@ -103,49 +105,43 @@ public class GameOfLife {
 
     public void start() throws Exception {
         this.co.generation = 1;
-        this.co.generationTarget = 16;
+        this.co.generationTarget = 2;
 
         while(this.co.generation<this.co.generationTarget){
             // On récupère les cellules
             this.co.tabCellulles  = (TabCellule) this.co.registry.lookup("TabCells"+(this.co.generation-1));
 
             // On redécoupe
-            for(int numCalculateur= 0;numCalculateur<nbCalculators;numCalculateur++) {
-                Cellule[][] cellules = new Cellule[sizeX][sizeY];
-                int compteur = 0;
-                for (int i = 0; i < MAX_CELLS_PROCESS; i++) {
-                    for (int j = 0; j < MAX_CELLS_PROCESS; j++) {
+/*            for(int numCalculateur= 0;numCalculateur<nbCalculators;numCalculateur++) {
+                Cellule[][] cellules = new Cellule[sizeX/nbCalculators][sizeY/nbCalculators];
+                for (int i = 0; i < sizeX/nbCalculators; i++) {
+                    for (int j = 0; j < sizeY/nbCalculators; j++) {
 
-                        int indexTotY = compteur;
 
-                        cellules[i][j] = this.co.tabCellulles.getCellules()[numCalculateur][indexTotY];
+                        cellules[i][j] = this.co.tabCellulles.getCellules()[i][j];
 
-                        compteur++;
                     }
                 }
                 this.co.calculators[numCalculateur].setCellules(cellules);
-            }
+            }*/
 
             while(!this.co.analyseNeightbors()){
                 // On applique les règles du jeu de la vie
             }
-
             // On réassemble les tableaux de cellules des calculateurs
-            Cellule[][] nouvCellules = new Cellule[nbCalculators][sizeX * sizeY];
+            HashSet<Cellule> nouvCellules = new HashSet<Cellule>(sizeX);
 
-            for(int numCalculator = 0;numCalculator<nbCalculators;numCalculator++){
-                Cellule[][] cellulesCalculateur = this.co.calculators[numCalculator].getCellules();
-                int compteur = 0;
-
-                for(int row = 0;row<cellulesCalculateur.length;row++){
-                    for(int col = 0;col<cellulesCalculateur[0].length;col++){
-
-                        nouvCellules[numCalculator][compteur] =
-                                cellulesCalculateur[row][col];
-                        compteur++;
-                    }
-                }
-            }
+//            for(int numCalculator = 0;numCalculator<nbCalculators;numCalculator++){
+//                Cellule[][] cellulesCalculateur = this.co.calculators[numCalculator].getCellules();
+//
+//                for(int row = 0;row<cellulesCalculateur.length;row++){
+//                    for(int col = 0;col<cellulesCalculateur[0].length;col++){
+//
+//                        nouvCellules[row][col] = cellulesCalculateur[row][col];
+//
+//                    }
+//                }
+//            }
             this.co.tabCellulles.setCellules(nouvCellules);
 
             // On met à jour le registry

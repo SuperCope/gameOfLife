@@ -2,6 +2,7 @@ import client.ComputeMyTask;
 
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.HashSet;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.FutureTask;
@@ -50,7 +51,7 @@ public class Communicator {
                     }
                 }
                 if(end){
-                    System.out.println("END"+this.generation);
+                    System.out.println("END OF GENERATION"+this.generation);
                     this.executor.shutdown();
                     for(int numCalculator = 0;numCalculator<this.calculators.length;numCalculator++) {
                         this.calculators[numCalculator].setFutureTask(new FutureTask<String>(this.calculators[numCalculator]));
@@ -68,26 +69,12 @@ public class Communicator {
 
         try {
 
-            Cellule[][] cellulesTot = new Cellule[nbCalculators][sizeX*sizeY];
+            HashSet<Cellule> cellulesTot = new HashSet<Cellule>(sizeX);
             this.calculators = new Calculator[nbCalculators];
             for(int numCalculateur= 0;numCalculateur<nbCalculators;numCalculateur++) {
-                Cellule[][] cellules = new Cellule[sizeX][sizeY];
-                int compteur = 0;
-
-                for (int i = 0; i < MAX_CELLS_PROCESS; i++) {
-                    for (int j = 0; j < MAX_CELLS_PROCESS; j++) {
+                HashSet<Cellule> cellules = new HashSet<Cellule>(sizeX/nbCalculators);
 
 
-                        int indexTotY = compteur;
-                        cellules[i][j] = new Cellule(i,j,0,false);
-                        if(((i ==0 && j==1) || (i==1 && j==1) || (i==2 && j==1))){
-                            cellules[i][j].setAlive(true);
-                        }
-                        cellulesTot[numCalculateur][indexTotY] = cellules[i][j];
-
-                        compteur++;
-                    }
-                }
 
                 calculators[numCalculateur] = new Calculator(numCalculateur,cellules,null);
 
@@ -107,7 +94,6 @@ public class Communicator {
             System.exit(0);
 
         }
-
 
     }
 
