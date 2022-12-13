@@ -1,6 +1,4 @@
-import client.ComputeMyTask;
-import engine.ComputeEngine;
-
+import java.rmi.Remote;
 import java.rmi.RemoteException;
 import java.util.HashSet;
 import java.util.concurrent.Callable;
@@ -33,7 +31,7 @@ public class GameOfLife {
         }*/
         try {
             // Configuration du serveur
-            this.se.setup(this.portActivationSystem,this.portRegistry,this.fichierConfigPolicy,null);
+            this.se.setup(this.portActivationSystem, this.portRegistry, this.fichierConfigPolicy);
             System.out.println("\u001B[34m"+"[INFO] CREATING THE SERVER..."+"\u001B[0m");
         }catch (Exception e){
             e.printStackTrace();
@@ -68,7 +66,7 @@ public class GameOfLife {
 
         try {
             // Création des objets partagé
-            TabCellule tabCellule = this.se.createSharedObject();
+            Object tabCellule = this.se.createSharedObject();
 
 
 
@@ -88,28 +86,27 @@ public class GameOfLife {
 
 
         // Création des calculateurs
-        this.co.createCalculators(nbCalculators,sizeX,sizeY);
 
     }
     public static void main(String[] args) {
+        GameOfLife gOL = new GameOfLife();
+        gOL.setParams();
+        gOL.init();
+        Hashlife hashlife = new Hashlife();
 
-        GameOfLife jdlv = new GameOfLife();
-        jdlv.setParams();
-        jdlv.init();
         try {
-            jdlv.start();
+            gOL.start();
+            GUI gameInterface = new GUI();
         }catch (Exception e){
             e.printStackTrace();
         }
     }
 
-    public void start() throws Exception {
+    public void start() {
         this.co.generation = 1;
         this.co.generationTarget = 2;
 
         while(this.co.generation<this.co.generationTarget){
-            // On récupère les cellules
-            this.co.tabCellulles  = (TabCellule) this.co.registry.lookup("TabCells"+(this.co.generation-1));
 
             // On redécoupe
 /*            for(int numCalculateur= 0;numCalculateur<nbCalculators;numCalculateur++) {
@@ -125,11 +122,7 @@ public class GameOfLife {
                 this.co.calculators[numCalculateur].setCellules(cellules);
             }*/
 
-            while(!this.co.analyseNeightbors()){
-                // On applique les règles du jeu de la vie
-            }
             // On réassemble les tableaux de cellules des calculateurs
-            HashSet<Cellule> nouvCellules = new HashSet<Cellule>(sizeX);
 
 //            for(int numCalculator = 0;numCalculator<nbCalculators;numCalculator++){
 //                Cellule[][] cellulesCalculateur = this.co.calculators[numCalculator].getCellules();
@@ -142,16 +135,12 @@ public class GameOfLife {
 //                    }
 //                }
 //            }
-            this.co.tabCellulles.setCellules(nouvCellules);
 
             // On met à jour le registry
-            this.co.registry.bind("TabCells"+this.co.generation, this.co.tabCellulles);
 
 
             // On met à jour la génération
             this.co.generation++;
-
-
         }
     }
 

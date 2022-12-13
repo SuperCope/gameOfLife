@@ -11,8 +11,8 @@ public class GUI extends JFrame
     JPanel gridPanel;
 
     String[] ballsImg = {
-        "redBall.png",
-        "blueBall.png",
+        "img/redBall.png",
+        "img/blueBall.png",
     };
 
     JButton cell;
