@@ -1,43 +1,44 @@
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
+import java.rmi.RemoteException;
+import java.sql.SQLOutput;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.regex.Pattern;
 
 public class Hashlife {
-    ArrayList<Object> memoNodes = new ArrayList<Object>();
+    private ArrayList<Object> memoNodes = new ArrayList<>();
 
-    HashMap<Object, Object> memoRes = new HashMap<Object, Object>();
-    int generation = 0;
-    int worldDepth = 0;
-    boolean fastForward = false;
-    Object[][] CM = new Object[6][6];
-    Object[][] CMr = new Object[6][6];
+    private HashMap<Object, Object> memoRes = new HashMap<>();
+    private int generation = 0;
+    private int worldDepth;
+    private Object rootNode;
+    private Object[][] CM = new Object[6][6];
+    private Object[][] CMr = new Object[6][6];
 
-    Node[] CNList = {
-            new Node(0, 0, 0, 0),
-            new Node(0, 0, 0, 1),
-            new Node(0, 0, 1, 0),
-            new Node(0, 0, 1, 1),
-            new Node(0, 1, 0, 0),
-            new Node(0, 1, 0, 1),
-            new Node(0, 1, 1, 0),
-            new Node(0, 1, 1, 1),
-            new Node(1, 0, 0, 0),
-            new Node(1, 0, 0, 1),
-            new Node(1, 0, 1, 0),
-            new Node(1, 0, 1, 1),
-            new Node(1, 1, 0, 0),
-            new Node(1, 1, 0, 1),
-            new Node(1, 1, 1, 0),
-            new Node(1, 1, 1, 1)
+    ServerNode[] CNList = {
+            new ServerNode(0, 0, 0, 0),
+            new ServerNode(0, 0, 0, 1),
+            new ServerNode(0, 0, 1, 0),
+            new ServerNode(0, 0, 1, 1),
+            new ServerNode(0, 1, 0, 0),
+            new ServerNode(0, 1, 0, 1),
+            new ServerNode(0, 1, 1, 0),
+            new ServerNode(0, 1, 1, 1),
+            new ServerNode(1, 0, 0, 0),
+            new ServerNode(1, 0, 0, 1),
+            new ServerNode(1, 0, 1, 0),
+            new ServerNode(1, 0, 1, 1),
+            new ServerNode(1, 1, 0, 0),
+            new ServerNode(1, 1, 0, 1),
+            new ServerNode(1, 1, 1, 0),
+            new ServerNode(1, 1, 1, 1)
     };
 
-    public Node pickCannonical(Object sw, Object se, Object nw, Object ne) {
-        Node candidat = null;
+    public ServerNode pickCannonical(Object sw, Object se, Object nw, Object ne) {
+        ServerNode candidat = null;
 
         if (sw == null) {
             sw = 0;
@@ -66,26 +67,20 @@ public class Hashlife {
     }
 
     Object createNode(Object sw, Object se, Object nw, Object ne) {
-        Node node = null;
+        ServerNode node;
 
         if (sw instanceof Integer) {
             node = this.pickCannonical(sw, se, nw, ne);
         } else {
-
-            node = new Node(sw, se, nw, ne, memoNodes.size());
-
-
+            node = new ServerNode(sw, se, nw, ne, memoNodes.size());
         }
 
         if (memoNodes.contains(node)) {
             return memoNodes.get(memoNodes.indexOf(node));
         }
-
         memoNodes.add(node);
 
         return node;
-
-
     }
 
     Object generateCanonical0(int depth) {
@@ -102,24 +97,25 @@ public class Hashlife {
     }
 
     Object addBorder(Object n) {
-        int depth = ((Node) n).getDepth();
+        int depth = ((ServerNode) n).getDepth();
 
         Object nodeBorder = generateCanonical0(depth - 1);
 
-        Object resSW = createNode(nodeBorder, nodeBorder, nodeBorder, ((Node) ((Node) n).getSw()));
-        Object resSE = createNode(nodeBorder, nodeBorder, ((Node) ((Node) n).getSe()), nodeBorder);
-        Object resNW = createNode(nodeBorder, ((Node) ((Node) n).getNw()), nodeBorder, nodeBorder);
-        Object resNE = createNode(((Node) (Node) n).getNe(), nodeBorder, nodeBorder, nodeBorder);
+        Object resSW = createNode(nodeBorder, nodeBorder, nodeBorder, ((ServerNode) ((ServerNode) n).getSw()));
+        Object resSE = createNode(nodeBorder, nodeBorder, ((ServerNode) ((ServerNode) n).getSe()), nodeBorder);
+        Object resNW = createNode(nodeBorder, ((ServerNode) ((ServerNode) n).getNw()), nodeBorder, nodeBorder);
+        Object resNE = createNode(((ServerNode) (ServerNode) n).getNe(), nodeBorder, nodeBorder, nodeBorder);
 
         return createNode(resSW, resSE, resNW, resNE);
     }
 
     Object getCenterNode(Object node) {
 
-        return createNode(((Node) ((Node) node).getSw()).getNe(), ((Node) ((Node) node).getSe()).getNw(), ((Node) ((Node) node).getNw()).getSe(), ((Node) ((Node) node).getNe()).getSw());
+        return createNode(((ServerNode) ((ServerNode) node).getSw()).getNe(), ((ServerNode) ((ServerNode) node).getSe()).getNw(), ((ServerNode) ((ServerNode) node).getNw()).getSe(), ((ServerNode) ((ServerNode) node).getNe()).getSw());
     }
 
     void processAuxiliaryMatrix() {
+
         Object[][] M = CM;
         Object[][] Mr = CMr;
         Object[] neighbours = new Object[9];
@@ -142,9 +138,11 @@ public class Hashlife {
                     }
                 }
                 if (nAlive < 2 || nAlive > 3) {
+                    System.out.println(("JE MEURS"));
                     res = 0;
                 } else {
                     if (nAlive == 3) {
+                        System.out.println(("JE NAIS"));
                         res = 1;
                     }
                 }
@@ -155,25 +153,25 @@ public class Hashlife {
     }
 
     void nodeToAuxiliaryMatrix(Object node) {
-        CM[1][1] = ((Node) ((Node) node).getSw()).getSw();
-        CM[1][2] = ((Node) ((Node) node).getSw()).getSe();
-        CM[1][3] = ((Node) ((Node) node).getSe()).getSw();
-        CM[1][4] = ((Node) ((Node) node).getSe()).getSe();
+        CM[1][1] = ((ServerNode) ((ServerNode) node).getSw()).getSw();
+        CM[1][2] = ((ServerNode) ((ServerNode) node).getSw()).getSe();
+        CM[1][3] = ((ServerNode) ((ServerNode) node).getSe()).getSw();
+        CM[1][4] = ((ServerNode) ((ServerNode) node).getSe()).getSe();
 
-        CM[2][1] = ((Node) ((Node) node).getSw()).getNw();
-        CM[2][2] = ((Node) ((Node) node).getSw()).getNe();
-        CM[2][3] = ((Node) ((Node) node).getSe()).getNw();
-        CM[2][4] = ((Node) ((Node) node).getSe()).getNe();
+        CM[2][1] = ((ServerNode) ((ServerNode) node).getSw()).getNw();
+        CM[2][2] = ((ServerNode) ((ServerNode) node).getSw()).getNe();
+        CM[2][3] = ((ServerNode) ((ServerNode) node).getSe()).getNw();
+        CM[2][4] = ((ServerNode) ((ServerNode) node).getSe()).getNe();
 
-        CM[3][1] = ((Node) ((Node) node).getNw()).getSw();
-        CM[3][2] = ((Node) ((Node) node).getNw()).getSe();
-        CM[3][3] = ((Node) ((Node) node).getNe()).getSw();
-        CM[3][4] = ((Node) ((Node) node).getNe()).getSe();
+        CM[3][1] = ((ServerNode) ((ServerNode) node).getNw()).getSw();
+        CM[3][2] = ((ServerNode) ((ServerNode) node).getNw()).getSe();
+        CM[3][3] = ((ServerNode) ((ServerNode) node).getNe()).getSw();
+        CM[3][4] = ((ServerNode) ((ServerNode) node).getNe()).getSe();
 
-        CM[4][1] = ((Node) ((Node) node).getNw()).getNw();
-        CM[4][2] = ((Node) ((Node) node).getNw()).getNe();
-        CM[4][3] = ((Node) ((Node) node).getNe()).getNw();
-        CM[4][4] = ((Node) ((Node) node).getNe()).getNe();
+        CM[4][1] = ((ServerNode) ((ServerNode) node).getNw()).getNw();
+        CM[4][2] = ((ServerNode) ((ServerNode) node).getNw()).getNe();
+        CM[4][3] = ((ServerNode) ((ServerNode) node).getNe()).getNw();
+        CM[4][4] = ((ServerNode) ((ServerNode) node).getNe()).getNe();
     }
 
     Object auxiliaryMatrixToNode() {
@@ -188,33 +186,37 @@ public class Hashlife {
     }
 
     Object stepNode(Object node) {
-        Object result = 0;
-        if (((Node) node).getDepth() == worldDepth) {
+        Object result;
+        if (((ServerNode) node).getDepth() == worldDepth) {
             generation += Math.pow(2, worldDepth - 2);
         }
-        if (((Node) node).getArea() == 0) {
+
+        if (((ServerNode) node).getArea() == 0) {
+
             return getCenterNode(node);
         }
         if (memoRes.containsKey(node)) {
             return memoRes.get(node);
         }
 
-        if (((Node) node).getDepth() == 2) {
+        if (((ServerNode) node).getDepth() == 2) {
+
             nodeToAuxiliaryMatrix(node);
             processAuxiliaryMatrix();
             result = getCenterNode(auxiliaryMatrixToNode());
 
 
         } else {
-            Object node11 = createNode(((Node) (((Node) node).getSw())).getSw(), ((Node) (((Node) node).getSw())).getSe(), ((Node) (((Node) node).getSw())).getNw(), ((Node) (((Node) node).getSw())).getNe());
-            Object node21 = createNode(((Node) (((Node) node).getSw())).getNw(), ((Node) (((Node) node).getSw())).getNe(), ((Node) (((Node) node).getNw())).getSw(), ((Node) (((Node) node).getNw())).getSe());
-            Object node31 = createNode(((Node) (((Node) node).getNw())).getSw(), ((Node) (((Node) node).getNw())).getSe(), ((Node) (((Node) node).getNw())).getNw(), ((Node) (((Node) node).getNw())).getNe());
-            Object node12 = createNode(((Node) (((Node) node).getSw())).getSe(), ((Node) (((Node) node).getSe())).getSw(), ((Node) (((Node) node).getSw())).getNe(), ((Node) (((Node) node).getSe())).getNw());
-            Object node22 = createNode(((Node) (((Node) node).getSw())).getNe(), ((Node) (((Node) node).getSe())).getNw(), ((Node) (((Node) node).getNw())).getSe(), ((Node) (((Node) node).getNe())).getSw());
-            Object node32 = createNode(((Node) (((Node) node).getNw())).getSe(), ((Node) (((Node) node).getNe())).getSw(), ((Node) (((Node) node).getNw())).getNe(), ((Node) (((Node) node).getNe())).getNw());
-            Object node13 = createNode(((Node) (((Node) node).getSe())).getSw(), ((Node) (((Node) node).getSe())).getSe(), ((Node) (((Node) node).getSe())).getNw(), ((Node) (((Node) node).getSe())).getNe());
-            Object node23 = createNode(((Node) (((Node) node).getSe())).getNw(), ((Node) (((Node) node).getSe())).getNe(), ((Node) (((Node) node).getNe())).getSw(), ((Node) (((Node) node).getNe())).getSe());
-            Object node33 = createNode(((Node) (((Node) node).getNe())).getSw(), ((Node) (((Node) node).getNe())).getSe(), ((Node) (((Node) node).getNe())).getNw(), ((Node) (((Node) node).getNe())).getNe());
+
+            Object node11 = createNode(((ServerNode) (((ServerNode) node).getSw())).getSw(), ((ServerNode) (((ServerNode) node).getSw())).getSe(), ((ServerNode) (((ServerNode) node).getSw())).getNw(), ((ServerNode) (((ServerNode) node).getSw())).getNe());
+            Object node21 = createNode(((ServerNode) (((ServerNode) node).getSw())).getNw(), ((ServerNode) (((ServerNode) node).getSw())).getNe(), ((ServerNode) (((ServerNode) node).getNw())).getSw(), ((ServerNode) (((ServerNode) node).getNw())).getSe());
+            Object node31 = createNode(((ServerNode) (((ServerNode) node).getNw())).getSw(), ((ServerNode) (((ServerNode) node).getNw())).getSe(), ((ServerNode) (((ServerNode) node).getNw())).getNw(), ((ServerNode) (((ServerNode) node).getNw())).getNe());
+            Object node12 = createNode(((ServerNode) (((ServerNode) node).getSw())).getSe(), ((ServerNode) (((ServerNode) node).getSe())).getSw(), ((ServerNode) (((ServerNode) node).getSw())).getNe(), ((ServerNode) (((ServerNode) node).getSe())).getNw());
+            Object node22 = createNode(((ServerNode) (((ServerNode) node).getSw())).getNe(), ((ServerNode) (((ServerNode) node).getSe())).getNw(), ((ServerNode) (((ServerNode) node).getNw())).getSe(), ((ServerNode) (((ServerNode) node).getNe())).getSw());
+            Object node32 = createNode(((ServerNode) (((ServerNode) node).getNw())).getSe(), ((ServerNode) (((ServerNode) node).getNe())).getSw(), ((ServerNode) (((ServerNode) node).getNw())).getNe(), ((ServerNode) (((ServerNode) node).getNe())).getNw());
+            Object node13 = createNode(((ServerNode) (((ServerNode) node).getSe())).getSw(), ((ServerNode) (((ServerNode) node).getSe())).getSe(), ((ServerNode) (((ServerNode) node).getSe())).getNw(), ((ServerNode) (((ServerNode) node).getSe())).getNe());
+            Object node23 = createNode(((ServerNode) (((ServerNode) node).getSe())).getNw(), ((ServerNode) (((ServerNode) node).getSe())).getNe(), ((ServerNode) (((ServerNode) node).getNe())).getSw(), ((ServerNode) (((ServerNode) node).getNe())).getSe());
+            Object node33 = createNode(((ServerNode) (((ServerNode) node).getNe())).getSw(), ((ServerNode) (((ServerNode) node).getNe())).getSe(), ((ServerNode) (((ServerNode) node).getNe())).getNw(), ((ServerNode) (((ServerNode) node).getNe())).getNe());
 
             Object res11 = stepNode(node11);
             Object res12 = stepNode(node12);
@@ -233,6 +235,7 @@ public class Hashlife {
 
             result = createNode(sw, se, nw, ne);
         }
+
         memoRes.put(node, result);
 
         return result;
@@ -314,7 +317,6 @@ public class Hashlife {
                         }
                         nodes.put(idx, node);
                         idx += 1;
-
                     }
                 }
 
@@ -328,9 +330,7 @@ public class Hashlife {
 
             Object res1 = addBorder(addBorder(nodes.get(idx - 1)));
 
-
-            worldDepth = ((Node) res1).getDepth();
-
+            worldDepth = ((ServerNode) res1).getDepth();
 
             return res1;
         } catch (Exception e) {
@@ -339,22 +339,21 @@ public class Hashlife {
         return 0;
     }
 
-    public Hashlife() {
+    public Hashlife() {}
 
-        Object rootNode = this.openFile("dataFiles/sample.mc");
-        this.worldDepth = ((Node) rootNode).getDepth();
+    public void init(String fileName) {
+        this.rootNode = this.openFile(fileName);
 
-        for (int i = 0; i < 200; i++) {
-
-            rootNode = this.addBorder(this.stepNode(rootNode));
-            System.out.println("J'OBTIENS " + this.memoNodes.size() + "," + i);
-            System.out.println("TAILLE DE MEMORES : " + this.memoRes.size());
-            if (i == 4) {
-                System.exit(0);
-            }
-        }
     }
 
+    public void createHashLife() {
+        this.worldDepth = ((ServerNode) rootNode).getDepth();
+    }
+
+    public void run() {
+        System.out.println("COURS");
+        rootNode = this.addBorder(this.stepNode(rootNode));
+    }
 
     int[][] lineToMatrix(String line) {
         int[][] M = new int[8][8];
@@ -409,5 +408,39 @@ public class Hashlife {
         return createNode(sw2, se2, nw2, ne2);
     }
 
+    public ArrayList<Object> getMemoNodes() {
+        return memoNodes;
+    }
 
+    public HashMap<Object, Object> getMemoRes() {
+        return memoRes;
+    }
+
+    public int getGeneration() {
+        return generation;
+    }
+
+    public int getWorldDepth() {
+        return worldDepth;
+    }
+
+    public void setRootNode(Object rootNode) {
+        this.rootNode = rootNode;
+    }
+    
+    public Object getRootNode() {
+        return rootNode;
+    }
+
+    public Object[][] getCM() {
+        return CM;
+    }
+
+    public Object[][] getCMr() {
+        return CMr;
+    }
+
+    public ServerNode[] getCNList() {
+        return CNList;
+    }
 }

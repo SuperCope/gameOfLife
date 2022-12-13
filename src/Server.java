@@ -1,6 +1,4 @@
 import java.rmi.Naming;
-import java.rmi.Remote;
-import java.rmi.RemoteException;
 import java.rmi.activation.*;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -19,30 +17,30 @@ public class Server {
         System.setProperty("java.security.policy", fichierConfigPolicy);
     }
 
-    public void start(Object tabCellule) throws Exception {
+    public void start(Object rootNode) throws Exception {
         this.registry = LocateRegistry.createRegistry(portRegistry);
-
+        System.out.println("\u001B[34m" +"[INFO] BINDING ROOT NODE TO RMI..." + "\u001B[0m");
+        this.registry.bind("rootNode", (Node)rootNode);
     }
 
-    public Object createSharedObject() {
-        Object tabCellule = null;
-        try {
-            ActivationGroupDesc agroupdesc = new ActivationGroupDesc(null, null);
-            ActivationSystem asystem = (ActivationSystem) Naming.lookup("//:" + portActivationSystem + "/java.rmi.activation.ActivationSystem");
-            ActivationGroupID agi = asystem.registerGroup(agroupdesc);
-
-            ActivationGroup.createGroup(agi, agroupdesc, 0);
-
-//            ActivationDesc objectDesc = new ActivationDesc(agi, "Object", "", null);
+//    public void createSharedObject(Object rootNode) {
+//        try {
+//            // ActivationGroupDesc agroupdesc = new ActivationGroupDesc(null, null);
+//            // ActivationSystem asystem = (ActivationSystem) Naming.lookup("//:" + portActivationSystem + "/java.rmi.activation.ActivationSystem");
+//            // ActivationGroupID agi = asystem.registerGroup(agroupdesc);
+//            // ActivationGroup.createGroup(agi, agroupdesc, 0);
+//            //ActivationDesc objectDesc = new ActivationDesc(agi, "NodeImpl", "",null);
 //
-//            tabCellule = Activatable.register(objectDesc);
-        } catch (Exception e) {
-            e.printStackTrace();
-            System.err.println("[ERROR] IMPOSSIBLE DE DEMARRER LE SERVEUR");
-            System.exit(0);
-        }
-        return tabCellule;
-    }
+//
+//
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//            System.err.println("[ERROR] IMPOSSIBLE DE DEMARRER LE SERVEUR");
+//            System.exit(0);
+//        }
+//
+//
+//    }
 
 }
 

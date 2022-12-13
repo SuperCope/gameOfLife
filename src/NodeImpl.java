@@ -1,8 +1,11 @@
-import java.util.ArrayList;
+import java.io.Serializable;
+import java.rmi.MarshalledObject;
+import java.rmi.RemoteException;
+import java.rmi.activation.Activatable;
+import java.rmi.activation.ActivationID;
 import java.util.Objects;
-import java.util.function.Function;
 
-public class Node {
+public class NodeImpl extends Activatable implements Node, Serializable {
     Object sw = 0;
     Object nw = 0;
     Object ne = 0;
@@ -12,11 +15,13 @@ public class Node {
     int id;
     boolean canonical;
 
-    public Node() {
+    public NodeImpl(ActivationID id, MarshalledObject data) throws RemoteException {
+        super(id, 0);
         this.depth = 1;
     }
 
-    public Node(Object sw, Object se, Object nw, Object ne, int id) {
+    public NodeImpl(Object sw, Object se, Object nw, Object ne, int id, ActivationID act_id, MarshalledObject data) throws RemoteException {
+        super(act_id, 0);
         this.sw = sw;
         this.se = se;
         this.nw = nw;
@@ -24,24 +29,25 @@ public class Node {
         this.id = id;
         this.canonical = false;
 
-        if (this.sw.getClass() == Node.class) {
-            this.depth = (Node.class.cast(this.sw)).getDepth() + 1;
+        if (this.sw.getClass() == NodeImpl.class) {
+            this.depth = (NodeImpl.class.cast(this.sw)).getDepth() + 1;
         }
-        if (this.getSw() instanceof Node && getSw() != (Object) 0) {
-            this.area += ((Node) getSw()).getArea();
+        if (this.getSw() instanceof NodeImpl && getSw() != (Object) 0) {
+            this.area += ((NodeImpl) getSw()).getArea();
         }
-        if (this.getSe() instanceof Node && getSe() != (Object) 0) {
-            this.area += ((Node) getSe()).getArea();
+        if (this.getSe() instanceof NodeImpl && getSe() != (Object) 0) {
+            this.area += ((NodeImpl) getSe()).getArea();
         }
-        if (this.getNw() instanceof Node && getNw() != (Object) 0) {
-            this.area += ((Node) getNw()).getArea();
+        if (this.getNw() instanceof NodeImpl && getNw() != (Object) 0) {
+            this.area += ((NodeImpl) getNw()).getArea();
         }
-        if (this.getNe() instanceof Node && getNe() != (Object) 0) {
-            this.area += ((Node) getNe()).getArea();
+        if (this.getNe() instanceof NodeImpl && getNe() != (Object) 0) {
+            this.area += ((NodeImpl) getNe()).getArea();
         }
     }
 
-    public Node(Object sw, Object se, Object nw, Object ne) {
+    public NodeImpl(Object sw, Object se, Object nw, Object ne, ActivationID id, MarshalledObject data) throws RemoteException {
+        super(id, 0);
         this.sw = sw;
         this.se = se;
         this.nw = nw;
@@ -120,7 +126,7 @@ public class Node {
             return true;
         }
         if (o != null) {
-            return this.getSw() == ((Node) o).getSw() && this.getSe() == ((Node) o).getSe() && this.getNw() == ((Node) o).getNw() && this.getNe() == ((Node) o).getNe();
+            return this.getSw() == ((NodeImpl) o).getSw() && this.getSe() == ((NodeImpl) o).getSe() && this.getNw() == ((NodeImpl) o).getNw() && this.getNe() == ((NodeImpl) o).getNe();
         }
 
         return false;
@@ -152,6 +158,7 @@ public class Node {
         return Objects.hash(nu);
     }
 
+    @Override
     public String toString() {
         String display = "";
         if (this.nw != null) {
