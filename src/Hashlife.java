@@ -110,15 +110,14 @@ public class Hashlife {
     }
 
     Object getCenterNode(Object node) {
-
         return createNode(((ServerNode) ((ServerNode) node).getSw()).getNe(), ((ServerNode) ((ServerNode) node).getSe()).getNw(), ((ServerNode) ((ServerNode) node).getNw()).getSe(), ((ServerNode) ((ServerNode) node).getNe()).getSw());
     }
 
     void processAuxiliaryMatrix() {
-
         Object[][] M = CM;
         Object[][] Mr = CMr;
         Object[] neighbours = new Object[9];
+
         for (int i = 1; i < 5; i++) {
             for (int j = 1; j < 5; j++) {
                 neighbours[0] = M[i - 1][j - 1];
@@ -152,6 +151,10 @@ public class Hashlife {
 
     }
 
+    /**
+     *
+     * @param node
+     */
     void nodeToAuxiliaryMatrix(Object node) {
         CM[1][1] = ((ServerNode) ((ServerNode) node).getSw()).getSw();
         CM[1][2] = ((ServerNode) ((ServerNode) node).getSw()).getSe();
@@ -185,6 +188,14 @@ public class Hashlife {
         return createNode(sw, se, nw, ne);
     }
 
+    /**
+     * Fonction Principale du HashLife
+     * Prend un noeud et retourne le résultat comme centre (depth - 1)
+     *
+     *
+     * @param node
+     * @return Object
+     */
     Object stepNode(Object node) {
         Object result;
         if (((ServerNode) node).getDepth() == worldDepth) {
@@ -192,7 +203,6 @@ public class Hashlife {
         }
 
         if (((ServerNode) node).getArea() == 0) {
-
             return getCenterNode(node);
         }
         if (memoRes.containsKey(node)) {
@@ -343,7 +353,6 @@ public class Hashlife {
 
     public void init(String fileName) {
         this.rootNode = this.openFile(fileName);
-
     }
 
     public void createHashLife() {

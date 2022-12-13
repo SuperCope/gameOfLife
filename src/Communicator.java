@@ -91,9 +91,6 @@ public class Communicator {
                     this.runTasks();
                 }
 
-                if(this.generation == 2) {
-                    System.exit(0);
-                }
 
             }catch(Exception e) {
                 e.printStackTrace();
